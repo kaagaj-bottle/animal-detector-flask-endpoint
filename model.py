@@ -8,4 +8,6 @@ print(f'Device: {device}')
 
 
 def output_from_model(input):
-    return model(input)
+    model.eval()
+    with torch.no_grad():
+        return model(input)
