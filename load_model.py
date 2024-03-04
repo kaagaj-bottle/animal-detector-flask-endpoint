@@ -20,5 +20,4 @@ model.classifier = torch.nn.Sequential(
                     bias=True)).to(device)
 
 
-model.load_state_dict(torch.load("model_cpu_state_dict.pth"))
-
+model.load_state_dict(torch.load("models_pth/model_march_3.pth", map_location=device))
