@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from PIL import Image
 import numpy as np
+from numpy.core.fromnumeric import argmax
 import torch
 from torchvision.transforms.functional import pil_to_tensor
 
@@ -40,7 +41,15 @@ def handle_blobs(blobs):
         input_tensor[idx] = preprocess_single_image(img)
     return input_tensor
 
-
+def save_images(blobs):
+    i=0
+    for key in blobs:
+        img=Image.open(blobs[key].stream)
+        try:
+            img.save(f"img{i}.bmp")
+            i+=1
+        except:
+            print(f"couldn't save the {i}th image")
 # endpoint to receive frames of video
 @app.route("/vision", methods=["POST"])
 def predict_vision():
@@ -51,14 +60,37 @@ def predict_vision():
 
     output = vision_output(input_tensor)
 
-    y_pred = [vision_classes[torch.argmax(item).detach().item()] for item in output]
+    y_pred = [vision_classes[torch.argmax(
+        item).detach().item()] for item in output]
     return jsonify({'msg': 'success', 'predictions': y_pred})
 
-@app.route("/audio",methods=["POST"])
-def predict_audio():
+@app.route("/save_frames",methods=["POST"])
+def save_frames():
     blobs=request.files
+    try:
+        save_images(blobs)
+        return jsonify("msg":"success")
+    except:
+        print("couldn't save images")
+        return jsonify("msg":"failure")
 
-    return jsonify({'msg':'success','output':'under construction'})
+@app.route("/vision_single", methods=["POST"])
+def predict_single_image():
+    image = request.files['image']
+    image = Image.open(image.stream)
+    image = preprocess_single_image(image)
+    image = torch.unsqueeze(image, 0)
+    output = vision_output(image)
+    type = vision_classes[torch.argmax(output)]
+    return jsonify({'msg': 'success', 'output': type})
+
+
+@app.route("/audio", methods=["POST"])
+def predict_audio():
+    blobs = request.files
+
+    return jsonify({'msg': 'success', 'output': 'under construction'})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
