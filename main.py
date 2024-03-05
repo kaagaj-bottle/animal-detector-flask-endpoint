@@ -6,7 +6,7 @@ import torch
 from torchvision.transforms.functional import pil_to_tensor
 
 from load_model import auto_transforms
-from model import vision_output
+from model import vision_output, audio_output, vision_classes, audio_classes
 
 
 app = Flask(__name__)
@@ -51,7 +51,7 @@ def predict_vision():
 
     output = vision_output(input_tensor)
 
-    y_pred = [torch.argmax(item).detach().item() for item in output]
+    y_pred = [vision_classes[torch.argmax(item).detach().item()] for item in output]
     return jsonify({'msg': 'success', 'predictions': y_pred})
 
 @app.route("/audio",methods=["POST"])
