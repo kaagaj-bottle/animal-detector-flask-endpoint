@@ -5,53 +5,18 @@ import numpy as np
 from numpy.core.fromnumeric import argmax
 import torch
 from torchvision.transforms.functional import pil_to_tensor
-
+from pathlib import Path
 from load_model import auto_transforms
 from model import vision_output, audio_output, vision_classes, audio_classes
+from utils import preprocess_single_image, handle_blobs, save_images, save_load_audio
 
 
 app = Flask(__name__)
 CORS(app, origins="*")
 
-# preprocesses single image to tensor of size and transformation as per pre-trained model
-
-
-def preprocess_single_image(img):
-    img_as_tensor = pil_to_tensor(img)
-    transformed_img = auto_transforms(img_as_tensor)
-    return transformed_img
-
-# takes input as blobs and outputs the input tensor for the model comprising of all the images
-
-
-def handle_blobs(blobs):
-    no_of_frames = len(blobs)
-    input_tensor = torch.zeros(
-        [no_of_frames, 3, 224, 224], dtype=torch.float32)
-    idx = 0
-
-    for key in blobs:
-        try:
-            img = Image.open(blobs[key].stream)
-        except Exception as e:
-            print('----------------------------------------------')
-            print(e)
-            print('----------------------------------------------')
-            return input_tensor
-        input_tensor[idx] = preprocess_single_image(img)
-        idx+=1
-    return input_tensor
-
-def save_images(blobs):
-    i=0
-    for key in blobs:
-        img=Image.open(blobs[key].stream)
-        try:
-            img.save(f"img{i}.bmp")
-            i+=1
-        except:
-            print(f"couldn't save the {i}th image")
 # endpoint to receive frames of video
+
+
 @app.route("/vision", methods=["POST"])
 def predict_vision():
 
@@ -65,15 +30,17 @@ def predict_vision():
         item).detach().item()] for item in output]
     return jsonify({'msg': 'success', 'predictions': y_pred})
 
-@app.route("/save_frames",methods=["POST"])
+
+@app.route("/save_frames", methods=["POST"])
 def save_frames():
-    blobs=request.files
+    blobs = request.files
     try:
         save_images(blobs)
-        return jsonify({"msg":"success"})
+        return jsonify({"msg": "success"})
     except:
         print("couldn't save images")
-        return jsonify({"msg":"failure"})
+        return jsonify({"msg": "failure"})
+
 
 @app.route("/vision_single", methods=["POST"])
 def predict_single_image():
@@ -88,9 +55,13 @@ def predict_single_image():
 
 @app.route("/audio", methods=["POST"])
 def predict_audio():
-    blobs = request.files
+    blob = request.files['audio']
+    input_tensor = save_load_audio(blob)
+    output = audio_output(input_tensor)
+    y_pred = [vision_classes[torch.argmax(
+        item).detach().item()] for item in output]
 
-    return jsonify({'msg': 'success', 'output': 'under construction'})
+    return jsonify({'msg': 'success', 'output': y_pred})
 
 
 if __name__ == "__main__":
