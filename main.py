@@ -6,7 +6,7 @@ import torch
 from torchvision.transforms.functional import pil_to_tensor
 
 from load_model import auto_transforms
-from model import output_from_model
+from model import vision_output
 
 
 app = Flask(__name__)
@@ -43,17 +43,22 @@ def handle_blobs(blobs):
 
 # endpoint to receive frames of video
 @app.route("/vision", methods=["POST"])
-def predict():
+def predict_vision():
 
     blobs = request.files
 
     input_tensor = handle_blobs(blobs)
 
-    output = output_from_model(input_tensor)
+    output = vision_output(input_tensor)
 
     y_pred = [torch.argmax(item).detach().item() for item in output]
     return jsonify({'msg': 'success', 'predictions': y_pred})
 
+@app.route("/audio",methods=["POST"])
+def predict_audio():
+    blobs=request.files
+
+    return jsonify({'msg':'success','output':'under construction'})
 
 if __name__ == "__main__":
     app.run(debug=True)
