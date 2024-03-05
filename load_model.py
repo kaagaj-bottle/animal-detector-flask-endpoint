@@ -21,7 +21,7 @@ def vision_model_constructor(output_shape: int = 55):
                         bias=True)).to(device)
 
     vision_model.load_state_dict(torch.load(
-        "models_pth/model_march_3.pth", map_location=device))
+        "models_pth/vision/model_march_3_55.pth", map_location=device))
     return vision_model
 
 
@@ -34,5 +34,5 @@ def audio_model_constructor(output_shape: int = 23):
                         bias=True)).to(device)
 
     audio_model.load_state_dict(torch.load(
-        "models_pth/model_march_3.pth", map_location=device))
+        "models_pth/audio/model_audio_march_5_0.pth", map_location=device))
     return audio_model
