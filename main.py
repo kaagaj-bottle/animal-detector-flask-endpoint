@@ -39,6 +39,7 @@ def handle_blobs(blobs):
             print('----------------------------------------------')
             return input_tensor
         input_tensor[idx] = preprocess_single_image(img)
+        idx+=1
     return input_tensor
 
 def save_images(blobs):
