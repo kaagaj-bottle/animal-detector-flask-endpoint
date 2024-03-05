@@ -69,10 +69,10 @@ def save_frames():
     blobs=request.files
     try:
         save_images(blobs)
-        return jsonify("msg":"success")
+        return jsonify({"msg":"success"})
     except:
         print("couldn't save images")
-        return jsonify("msg":"failure")
+        return jsonify({"msg":"failure"})
 
 @app.route("/vision_single", methods=["POST"])
 def predict_single_image():
